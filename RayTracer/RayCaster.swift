@@ -72,6 +72,7 @@ class RayCaster: Renderer {
         
         windowController.updateStatusLabel("Processing depth pixels for", scene: sceneFile)
         processDepth(saveImage: saveDepth)
+        processNormals(saveImage: saveDepth)
         
         // release images and scene to free up memory -- will need to be
         // recreated if rendedered again!
@@ -123,6 +124,7 @@ class RayCaster: Renderer {
         if save {
             result.savePNGToDesktop("\(sceneFile.rawValue)_normal")
         }
+        windowController.updateImageView(result)
     }
     
     func displayResult(saveImage save: Bool) {
