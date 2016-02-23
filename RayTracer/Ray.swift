@@ -32,8 +32,7 @@ class Ray: CustomStringConvertible {
     }
     
     func pointAtParameter(t: Float) -> vector_float3 {
-        //FIXME: Not yet implemented!
-        return vector_float3()
+        return normalize(origin + t * direction)
     }
     
 }
