@@ -34,26 +34,52 @@ class Sphere: ObjectType, CustomStringConvertible {
     }
     
     func intersect(ray r: Ray, tMin: Float, hit h: Hit) -> Bool {
-        let newOrigin = r.origin - self.center
+        let originTranslation = r.origin - center
         
-        let inside = ((2 * dot(r.direction, newOrigin)) ** 2 - 4 * (r.direction.x ** 2 + r.direction.y ** 2 + r.direction.z ** 2) * (dot(newOrigin, newOrigin) - radius ** 2))
-        if inside <= 0 { return false }
+        let a = length(r.direction) ** 2
+        let b = dot(2 * r.direction, originTranslation)
+        let c = dot(originTranslation, originTranslation) - (radius ** 2)
         
-        let d = sqrt(inside)
+        let dSquared = (b ** 2) - (4 * a * c)
+        if dSquared <= 0 { return false }
         
-        let t1 = (-1 * (2 * dot(r.direction, newOrigin)) + d)/(2 * (r.direction.x ** 2 + r.direction.y ** 2 + r.direction.z ** 2))
-        let t2 = (-1 * (2 * dot(r.direction, newOrigin)) - d)/(2 * (r.direction.x ** 2 + r.direction.y ** 2 + r.direction.z ** 2))
+        let d = sqrt(dSquared)
+        let t0 = (-b - d) / (2 * a)
+        let t1 = (-b + d) / (2 * a)
         
-        if t1 <= tMin || t1 >= h.t && t2 < tMin || t2 >= h.t { return false }
+        if t0 > tMin && t0 < h.t {
+            let n = normalize(r.pointAtParameter(t0) - center)
+            h.set(t: t0, material: material, normal: n)
+            
+            return true
+        }
         
-        let trueT = max(t1, t2)
+        if t1 > tMin && t1 < h.t {
+            let n = normalize(r.pointAtParameter(t1) - center)
+            h.set(t: t1, material: material, normal: n)
+            
+            return true
+        }
         
-//        let normal = normalize(newOrigin + trueT * r.direction)
-        let normal = r.pointAtParameter(trueT)
+        return false
         
-        h.set(t: trueT, material: material, normal: normal)
-        
-        return true
+//        let inside = ((2 * dot(r.direction, originTranslation)) ** 2 - 4 * (r.direction.x ** 2 + r.direction.y ** 2 + r.direction.z ** 2) * (dot(originTranslation, originTranslation) - radius ** 2))
+//        if inside <= 0 { return false }
+//        
+//        let d = sqrt(inside)
+//        
+//        let t1 = (-1 * (2 * dot(r.direction, originTranslation)) + d)/(2 * (r.direction.x ** 2 + r.direction.y ** 2 + r.direction.z ** 2))
+//        let t2 = (-1 * (2 * dot(r.direction, originTranslation)) - d)/(2 * (r.direction.x ** 2 + r.direction.y ** 2 + r.direction.z ** 2))
+//        
+//        if t1 <= tMin || t1 >= h.t && t2 < tMin || t2 >= h.t { return false }
+//        
+//        let trueT = min(t1, t2)
+//        
+//        let normal = r.pointAtParameter(trueT)
+//        
+//        h.set(t: trueT, material: material, normal: normal)
+//        
+//        return true
     }
     
 }
