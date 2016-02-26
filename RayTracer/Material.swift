@@ -39,9 +39,9 @@ class Material {
     }
     
     func shade(ray: Ray, hit: Hit, lightInfo light: (direction: vector_float3, color: vector_float3)) -> vector_float3 {
-        //FIXME: Not yet implemented!
+        let lNot = diffuseColor * max(0, dot(hit.normal!, light.direction)) * light.color
 
-        return vector_float3()
+        return lNot
     }
     
 }
