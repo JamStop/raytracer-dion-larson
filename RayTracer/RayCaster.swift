@@ -73,6 +73,7 @@ class RayCaster: Renderer {
         windowController.updateStatusLabel("Processing depth pixels for", scene: sceneFile)
         processDepth(saveImage: saveDepth)
         processNormals(saveImage: saveNormal)
+        displayResult(saveImage: saveImage)
         
         // release images and scene to free up memory -- will need to be
         // recreated if rendedered again!
@@ -92,12 +93,22 @@ class RayCaster: Renderer {
         if scene.group.intersect(ray: ray, tMin: scene.camera.tMin, hit: hit) {
             setDepthPixel(x: i, y: j, hit: hit)
             setNormalPixel(x: i, y: j, hit: hit)
+            image.setPixel(x: i, y: j, color: shade(ray: ray, hit: hit))
+        }
+        else {
+            image.setPixel(x: i, y: j, color: scene.backgroundColor)
         }
     }
     
     func shade(ray ray: Ray, hit: Hit) -> vector_float3 {
-        //FIXME: Not yet implemented!
-        return vector_float3()
+        
+        var lighting = (hit.material?.shade(ray, hit: hit, lightInfo: (normalize(ray.direction), scene.ambientLight)))!
+        
+        for light in scene.lights {
+            lighting += (hit.material?.shade(ray, hit: hit, lightInfo: light.getIllumination(point: hit.normal!)))!
+        }
+        
+        return lighting
     }
     
     func setDepthPixel(x x: Int, y: Int, hit: Hit) {
