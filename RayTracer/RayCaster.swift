@@ -93,7 +93,9 @@ class RayCaster: Renderer {
         if scene.group.intersect(ray: ray, tMin: scene.camera.tMin, hit: hit) {
             setDepthPixel(x: i, y: j, hit: hit)
             setNormalPixel(x: i, y: j, hit: hit)
-            image.setPixel(x: i, y: j, color: shade(ray: ray, hit: hit))
+            
+            let color = shade(ray: ray, hit: hit)
+            image.setPixel(x: i, y: j, color: color)
         }
         else {
             image.setPixel(x: i, y: j, color: scene.backgroundColor)
@@ -102,13 +104,32 @@ class RayCaster: Renderer {
     
     func shade(ray ray: Ray, hit: Hit) -> vector_float3 {
         
-        var lighting = (hit.material?.shade(ray, hit: hit, lightInfo: (normalize(ray.direction), scene.ambientLight)))!
+        // Jimmy Implementation -> Is working but differs in ambient light implementation
+//        var lighting = (hit.material?.shade(ray, hit: hit, lightInfo: (normalize(ray.direction), scene.ambientLight)))!
+//        
+//        for light in scene.lights {
+//            lighting += (hit.material?.shade(ray, hit: hit, lightInfo: light.getIllumination(point: hit.normal!)))!
+//        }
+//        
+//        return lighting
         
-        for light in scene.lights {
-            lighting += (hit.material?.shade(ray, hit: hit, lightInfo: light.getIllumination(point: hit.normal!)))!
+        guard let material = hit.material else {
+            fatalError("Hit without a material assigned!")
         }
         
-        return lighting
+        // Normalizing your normal lets you make sure that the normal isn't unnormalized through transforms
+        hit.setNormal(normalize(hit.normal!))
+        
+        var color = scene.ambientLight * material.diffuseColor
+        
+        let p = ray.pointAtParameter(hit.t)
+        for light in scene.lights {
+            let lightInfo = light.getIllumination(point: p)
+            color += material.shade(ray, hit: hit, lightInfo: lightInfo)
+        }
+        
+        return color
+        
     }
     
     func setDepthPixel(x x: Int, y: Int, hit: Hit) {

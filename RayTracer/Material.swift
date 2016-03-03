@@ -17,7 +17,7 @@ import simd
 
 class Material {
     
-    private let diffuseColor: vector_float3
+    internal let diffuseColor: vector_float3
     private let specularColor: vector_float3
     private let shininess: Float
     private var texture: Texture?
@@ -39,9 +39,26 @@ class Material {
     }
     
     func shade(ray: Ray, hit: Hit, lightInfo light: (direction: vector_float3, color: vector_float3)) -> vector_float3 {
-        let lNot = diffuseColor * max(0, dot(hit.normal!, light.direction)) * light.color
+        // 100% working Jimmy version
+//        let shaded = diffuseColor * max(0, dot(hit.normal!, light.direction)) * light.color
+        
+        let diffuseInfluence = max(dot(hit.normal!, light.direction), 0)
+        
+        if diffuseInfluence == 0 { return vector_float3() }
+        
+        let diffuseShading = diffuseColor * diffuseInfluence * light.color
+        
+        let reflectionAngle = -1 * light.direction + 2 * dot(light.direction, hit.normal!) * hit.normal!
 
-        return lNot
+        let specularInfluence = max(dot(ray.direction, normalize(reflectionAngle)), 0)
+        
+//        if specularInfluence == 0 { return vector_float3() }
+        
+        let specularShading = specularColor * (specularInfluence ** shininess) * light.color
+        
+        let shading = diffuseShading + specularShading
+
+        return shading
     }
     
 }
