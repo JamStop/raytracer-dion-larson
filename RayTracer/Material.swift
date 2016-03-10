@@ -42,23 +42,48 @@ class Material {
         // 100% working Jimmy version
 //        let shaded = diffuseColor * max(0, dot(hit.normal!, light.direction)) * light.color
         
-        let diffuseInfluence = max(dot(hit.normal!, light.direction), 0)
+        guard let normal = hit.normal else {
+            fatalError("Hit doesn't have normal")
+        }
         
-        if diffuseInfluence == 0 { return vector_float3() }
+        let influence = dot(light.direction, normal)
+        if influence <= 0 {
+            return vector_float3(0, 0, 0)
+        }
         
-        let diffuseShading = diffuseColor * diffuseInfluence * light.color
+        var shade = textureOrDiffuseColor(hit.textureCoords) * max(dot(light.direction, normal), 0) * light.color
         
-        let reflectionAngle = -1 * light.direction + 2 * dot(light.direction, hit.normal!) * hit.normal!
-
-        let specularInfluence = max(dot(ray.direction, normalize(reflectionAngle)), 0)
+        let v = -light.direction + 2 * influence * normal
+        let R = max(dot(-ray.direction, v), 0) ** shininess
+        shade += specularColor * R * light.color
         
-//        if specularInfluence == 0 { return vector_float3() }
+        return shade
         
-        let specularShading = specularColor * (specularInfluence ** shininess) * light.color
         
-        let shading = diffuseShading + specularShading
-
-        return shading
+//        let diffuseInfluence = max(dot(hit.normal!, light.direction), 0)
+//        
+//        if diffuseInfluence == 0 { return vector_float3() }
+//        
+//        let diffuseShading = diffuseColor * diffuseInfluence * light.color
+//        
+//        let reflectionAngle = -1 * light.direction + 2 * dot(light.direction, hit.normal!) * hit.normal!
+//
+//        let specularInfluence = max(dot(ray.direction, normalize(reflectionAngle)), 0)
+//        
+////        if specularInfluence == 0 { return vector_float3() }
+//        
+//        let specularShading = specularColor * (specularInfluence ** shininess) * light.color
+//        
+//        let shading = diffuseShading + specularShading
+//
+//        return shading
+    }
+    
+    func textureOrDiffuseColor(textureCoords: vector_float2?) -> vector_float3 {
+        if let texture = texture, let textureCoords = textureCoords {
+            return texture.colorAt(textureCoords)
+        }
+        return vector_float3()
     }
     
 }
